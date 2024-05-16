@@ -2,6 +2,7 @@ package com.uptask.api.Services;
 
 import com.uptask.api.DTOs.ProjectDTO;
 import com.uptask.api.DTOs.TaskDTO;
+import com.uptask.api.models.Task;
 
 import java.util.List;
 
@@ -13,6 +14,10 @@ public interface TaskService {
 
     TaskDTO getTaskById(ProjectDTO projectDTO, String taskId);
 
-    void updateTask(ProjectDTO projectDTO, String taskId, TaskDTO taskDTO);
+    void updateTask(String taskId, TaskDTO taskDTO, Task task);
+
+    void deleteTask(ProjectDTO projectDTO, String taskId);
+
+    void updateTaskStatus(String taskId, String status, Task task);
 
 }

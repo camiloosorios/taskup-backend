@@ -3,6 +3,7 @@ package com.uptask.api.controllers;
 import com.uptask.api.DTOs.ProjectDTO;
 import com.uptask.api.DTOs.TaskDTO;
 import com.uptask.api.Services.TaskService;
+import com.uptask.api.models.Task;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -67,10 +68,40 @@ public class TaskController {
     @PutMapping("/{taskId}")
     public ResponseEntity<?> updateTask(@PathVariable String taskId, @RequestBody TaskDTO taskDTO, HttpServletRequest request) {
         try {
-            ProjectDTO projectDTO = (ProjectDTO) request.getAttribute("projectDTO");
-            taskService.updateTask(projectDTO, taskId, taskDTO);
+            Task task = (Task) request.getAttribute("task");
+            taskService.updateTask(taskId, taskDTO, task);
 
-            return ResponseEntity.ok().body("Tarea Actualizada");
+            return ResponseEntity.ok().body("Tarea Actualizada Correctamente");
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+
+            return ResponseEntity.status(400).body(error);
+        }
+    }
+
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<?> deleteTask(@PathVariable String taskId, HttpServletRequest request) {
+        try {
+            ProjectDTO projectDTO = (ProjectDTO) request.getAttribute("projectDTO");
+            taskService.deleteTask(projectDTO, taskId);
+
+            return ResponseEntity.ok().body("Tarea Eliminada Correctamente");
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+
+            return ResponseEntity.status(400).body(error);
+        }
+    }
+
+    @PostMapping("/{taskId}/status")
+    public ResponseEntity<?> updateTaskStatus(@PathVariable String taskId, @RequestBody Map<String, String> status, HttpServletRequest request) {
+        try {
+            Task task = (Task) request.getAttribute("task");
+            taskService.updateTaskStatus(taskId, status.get("status"), task);
+
+            return ResponseEntity.ok().body("Tarea Actualizada Correctamente");
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
