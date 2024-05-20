@@ -24,8 +24,10 @@ public class TaskExistInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         ProjectDTO projectDTO = (ProjectDTO) request.getAttribute("projectDTO");
-        String taskId = request.getRequestURI().split("/")[5];
+        String requestUri = request.getRequestURI();
+        String taskId = requestUri.split("/")[5];
         TaskDTO taskDTO = taskService.getTaskById(projectDTO, taskId);
+
         if (taskDTO == null) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.setContentType("application/json");
@@ -36,9 +38,9 @@ public class TaskExistInterceptor implements HandlerInterceptor {
             PrintWriter writer = response.getWriter();
             writer.write(errorMessage);
             writer.flush();
-
             return false;
         }
+
         Task task = Task.builder()
                 .id(taskDTO.getId())
                 .name(taskDTO.getName())
@@ -48,6 +50,7 @@ public class TaskExistInterceptor implements HandlerInterceptor {
                 .createdAt(taskDTO.getCreatedAt())
                 .updatedAt(taskDTO.getUpdatedAt())
                 .build();
+
         request.setAttribute("task", task);
 
         return true;

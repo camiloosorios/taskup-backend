@@ -1,8 +1,10 @@
-package com.uptask.api.Services;
+package com.uptask.api.Services.impl;
 
 import com.uptask.api.DTOs.ProjectDTO;
 import com.uptask.api.DTOs.TaskDTO;
 import com.uptask.api.Repositories.TaskRepository;
+import com.uptask.api.Services.ProjectService;
+import com.uptask.api.Services.TaskService;
 import com.uptask.api.enums.Status;
 import com.uptask.api.models.Project;
 import com.uptask.api.models.Task;
@@ -34,7 +36,7 @@ public class TaskServiceImpl implements TaskService {
                 .name(taskDTO.getName())
                 .description(taskDTO.getDescription())
                 .status(Status.PENDING.getValue())
-                .project(project)
+                .project(project.getId())
                 .createdAt(LocalDate.now())
                 .updatedAt(LocalDate.now())
                 .build();
@@ -124,7 +126,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public void updateTaskStatus(String taskId, String status, Task task) {
+    public void updateTaskStatus(String status, Task task) {
         if (status == null) {
             throw new RuntimeException("El Estado de la tarea es Obligatorio");
         }
@@ -158,7 +160,7 @@ public class TaskServiceImpl implements TaskService {
                 .name(task.getName())
                 .description(task.getDescription())
                 .status(task.getStatus())
-                .project(project)
+                .project(project.getId())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .build();

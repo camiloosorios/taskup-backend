@@ -3,6 +3,7 @@ package com.uptask.api.controllers;
 import com.uptask.api.DTOs.ProjectDTO;
 import com.uptask.api.DTOs.TaskDTO;
 import com.uptask.api.Services.TaskService;
+import com.uptask.api.models.Project;
 import com.uptask.api.models.Task;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,10 +97,11 @@ public class TaskController {
     }
 
     @PostMapping("/{taskId}/status")
-    public ResponseEntity<?> updateTaskStatus(@PathVariable String taskId, @RequestBody Map<String, String> status, HttpServletRequest request) {
+    public ResponseEntity<?> updateTaskStatus(@RequestBody Map<String, String> status, HttpServletRequest request) {
         try {
             Task task = (Task) request.getAttribute("task");
-            taskService.updateTaskStatus(taskId, status.get("status"), task);
+            ProjectDTO projectDTO = (ProjectDTO) request.getAttribute("projectDTO");
+            taskService.updateTaskStatus(status.get("status"), task);
 
             return ResponseEntity.ok().body("Tarea Actualizada Correctamente");
         } catch (RuntimeException e) {

@@ -18,6 +18,6 @@ public interface TaskService {
 
     void deleteTask(ProjectDTO projectDTO, String taskId);
 
-    void updateTaskStatus(String taskId, String status, Task task);
+    void updateTaskStatus(String status, Task task);
 
 }

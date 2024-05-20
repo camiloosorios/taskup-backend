@@ -21,7 +21,7 @@ public class TaskDTO {
 
     private String status;
 
-    private Project project;
+    private String project;
 
     private LocalDate createdAt;
 

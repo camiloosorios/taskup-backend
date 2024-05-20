@@ -1,7 +1,8 @@
-package com.uptask.api.Services;
+package com.uptask.api.Services.impl;
 
 import com.uptask.api.DTOs.ProjectDTO;
 import com.uptask.api.Repositories.ProjectRepository;
+import com.uptask.api.Services.ProjectService;
 import com.uptask.api.models.Project;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,13 +92,13 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     private void validateProjectDTO(ProjectDTO projectDTO) {
-        if (projectDTO.getProjectName() == null) {
+        if (projectDTO.getProjectName() == null || projectDTO.getProjectName().isBlank()) {
             throw new RuntimeException("El Nombre del Proyecto es Obligatorio");
         }
-        if (projectDTO.getClientName() == null) {
+        if (projectDTO.getClientName() == null || projectDTO.getClientName().isBlank()) {
             throw new RuntimeException("El Nombre del Cliente es Obligatorio");
         }
-        if (projectDTO.getDescription() == null) {
+        if (projectDTO.getDescription() == null || projectDTO.getDescription().isBlank()) {
             throw new RuntimeException("La Descripción del Proyecto es Obligatoria");
         }
     }
