@@ -4,6 +4,6 @@ import com.uptask.api.DTOs.CreateUserDTO;
 
 public interface UserService {
 
-    void createUser(CreateUserDTO createUserDTO);
+    String createUser(CreateUserDTO createUserDTO);
 
 }

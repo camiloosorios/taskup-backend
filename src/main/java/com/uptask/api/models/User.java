@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,6 +15,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 @Setter
 @Builder
 @ToString
+@Document(collection = "users")
 public class User {
 
     @Id
@@ -24,7 +26,6 @@ public class User {
 
     @NotBlank
     @Email
-    @Indexed(unique = true)
     private String email;
 
     @NotBlank

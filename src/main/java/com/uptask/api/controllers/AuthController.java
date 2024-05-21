@@ -22,9 +22,11 @@ public class AuthController {
     @PostMapping("/create-account")
     public ResponseEntity<?> createAccount(@RequestBody CreateUserDTO createAccount) {
         try {
-            userService.createUser(createAccount);
-
-            return ResponseEntity.ok().body("Cuenta Creada");
+            String token = userService.createUser(createAccount);
+            Map<String, String> response = new HashMap<>();
+            response.put("message","Cuenta Creada, revisa tu email para confirmarla");
+            response.put("token", token);
+            return ResponseEntity.ok().body(response);
         } catch (RuntimeException e) {
             Map<String, String> response = new HashMap<>();
             response.put("error", e.getMessage());

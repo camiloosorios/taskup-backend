@@ -4,9 +4,10 @@ package com.uptask.api.Services.impl;
 import com.uptask.api.DTOs.CreateUserDTO;
 import com.uptask.api.Repositories.UserRepository;
 import com.uptask.api.Services.UserService;
-import com.uptask.api.Services.utils.PasswordEncryptionService;
+import com.uptask.api.Services.helpers.JwtService;
 import com.uptask.api.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,10 +17,13 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncryptionService passwordEncryptionService;
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
 
     @Override
-    public void createUser(CreateUserDTO createUserDTO) {
+    public String createUser(CreateUserDTO createUserDTO) {
         if (createUserDTO.getName() == null || createUserDTO.getName().isBlank()) {
             throw new RuntimeException("El nombre no puede ir vacio");
         }
@@ -35,8 +39,9 @@ public class UserServiceImpl implements UserService {
         if (createUserDTO.getPasswordConfirmation() == null ||!createUserDTO.getPasswordConfirmation().equals(createUserDTO.getPassword())) {
             throw new RuntimeException("Los password no son iguales");
         }
+        validateUserExists(createUserDTO.getEmail());
         try {
-            String encryptedPassword = passwordEncryptionService.encryptPassword(createUserDTO.getPassword());
+            String encryptedPassword = passwordEncoder.encode(createUserDTO.getPassword());
             User user = User.builder()
                     .name(createUserDTO.getName())
                     .email(createUserDTO.getEmail())
@@ -44,8 +49,16 @@ public class UserServiceImpl implements UserService {
                     .confirmed(false)
                     .build();
             userRepository.save(user);
+            return jwtService.generateToken(user.getEmail());
         } catch (RuntimeException e) {
             throw new RuntimeException("Error al crear usuario");
+        }
+    }
+
+    private void validateUserExists(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user != null) {
+            throw new RuntimeException("El usuario ya esta registrado");
         }
     }
 
