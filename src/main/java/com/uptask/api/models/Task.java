@@ -9,11 +9,9 @@ import java.time.LocalDate;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 @Builder
 @Document(collection = "tasks")
-@ToString
 public class Task {
 
     @Id

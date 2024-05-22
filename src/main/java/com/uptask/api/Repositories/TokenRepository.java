@@ -1,16 +1,13 @@
 package com.uptask.api.Repositories;
 
-import com.uptask.api.models.Task;
+import com.uptask.api.models.Token;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
-public interface TaskRepository extends MongoRepository<Task, String> {
+public interface TokenRepository extends MongoRepository<Token, String> {
 
-    @Query("{'project': ?0}")
-    List<Task> findByProject(String project);
-
+    @Query("{'token': ?0}")
+    Token findByToken(String token);
 }
