@@ -5,12 +5,14 @@ import com.uptask.api.Services.TokenService;
 import com.uptask.api.models.Token;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -20,7 +22,8 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     @Transactional
-    public String create(String user) {
+    @Async
+    public CompletableFuture<String> create(String user) {
         Token newToken = Token.builder()
                 .user(user)
                 .token(generateToken())
@@ -28,7 +31,7 @@ public class TokenServiceImpl implements TokenService {
                 .build();
 
         tokenRepository.save(newToken);
-        return newToken.getToken();
+        return CompletableFuture.completedFuture(newToken.getToken());
     }
 
     @Override

@@ -5,7 +5,6 @@ import com.uptask.api.Services.TokenService;
 import com.uptask.api.Services.UserService;
 import com.uptask.api.Services.helpers.EmailService;
 import com.uptask.api.models.Token;
-import com.uptask.api.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +33,7 @@ public class AuthController {
         try {
             userService.createUser(createAccount);
 
-            return ResponseEntity.ok().body("Cuenta Creada, revisa tu email para confirmarla");
+            return ResponseEntity.status(201).body("Cuenta Creada, revisa tu email para confirmarla");
         } catch (RuntimeException e) {
             Map<String, String> response = new HashMap<>();
             response.put("error", e.getMessage());
@@ -47,7 +46,6 @@ public class AuthController {
     public ResponseEntity<?> confirmAccount(@RequestBody Map<String, String> body) {
         try {
             String token = body.get("token");
-            System.out.println(token);
             Token tokenExists = tokenService.validate(token);
             if (tokenExists == null) {
                 throw new RuntimeException("Token no valido");

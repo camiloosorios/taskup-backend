@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.CompletableFuture;
+
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -56,11 +58,12 @@ public class UserServiceImpl implements UserService {
                     .build();
 
             user = userRepository.save(user);
-            String token = tokenService.create(user.getId());
-            emailService.sendEmail(user.getEmail(),
+            CompletableFuture<String> tokenFuture = tokenService.create(user.getId());
+            User finalUser = user;
+            tokenFuture.thenAccept(token -> emailService.sendEmail(finalUser.getEmail(),
                     "UpTask - Confirma tu cuenta",
-                    user.getName(),
-                    token);
+                    finalUser.getName(),
+                    token));
 
             return user;
         } catch (RuntimeException e) {
@@ -97,11 +100,12 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Usuario no encontrado");
         }
         if (!user.getConfirmed()) {
-            String token = tokenService.create(user.getId());
-            emailService.sendEmail(user.getEmail(),
+            CompletableFuture<String> tokenFuture = tokenService.create(user.getId());
+            User finalUser = user;
+            tokenFuture.thenAccept(token -> emailService.sendEmail(finalUser.getEmail(),
                     "UpTask - Confirma tu cuenta",
-                    user.getName(),
-                    token);
+                    finalUser.getName(),
+                    token));
             throw new RuntimeException("La cuenta no ha sido confirmada, hemos enviado un e-mail de confirmacion");
         }
         if (!passwordEncoder.matches(password, user.getPassword())) {
