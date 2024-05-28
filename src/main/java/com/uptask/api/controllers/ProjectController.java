@@ -5,6 +5,8 @@ import com.uptask.api.Services.ProjectService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -22,11 +24,11 @@ public class ProjectController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createProject(@RequestBody ProjectDTO projectDTO) {
+    public ResponseEntity<?> createProject(@RequestBody ProjectDTO projectDTO, HttpServletRequest request) {
         try {
             projectService.createProject(projectDTO);
 
-            return ResponseEntity.ok().body("Producto Creado correctamente");
+            return ResponseEntity.ok().body("Projecto Creado correctamente");
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
@@ -36,8 +38,9 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getProjectById(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<?> getProjectById(HttpServletRequest request) {
         ProjectDTO projectDTO = (ProjectDTO) request.getAttribute("projectDTO");
+
         return ResponseEntity.ok().body(projectDTO);
     }
 

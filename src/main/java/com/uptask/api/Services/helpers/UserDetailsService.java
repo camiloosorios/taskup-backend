@@ -17,10 +17,10 @@ public class UserDetailsService implements org.springframework.security.core.use
     private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email);
+    public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
+        User user = userRepository.findById(id).orElse(null);
         if (user == null) {
-            throw new UsernameNotFoundException("Usuario con email ".concat(email).concat(" no existe"));
+            throw new UsernameNotFoundException("Token no valido");
         }
 
         return org.springframework.security.core.userdetails.User.builder()

@@ -2,10 +2,13 @@ package com.uptask.api.Services.impl;
 
 
 import com.uptask.api.DTOs.CreateUserDTO;
+import com.uptask.api.DTOs.ResetPasswordDTO;
 import com.uptask.api.Repositories.UserRepository;
 import com.uptask.api.Services.TokenService;
 import com.uptask.api.Services.UserService;
 import com.uptask.api.Services.helpers.EmailService;
+import com.uptask.api.Services.helpers.JwtService;
+import com.uptask.api.models.Token;
 import com.uptask.api.models.User;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private TokenService tokenService;
 
+    @Autowired
+    private JwtService jwtService;
+
 
     @Override
     public User createUser(CreateUserDTO createUserDTO) {
@@ -47,37 +53,52 @@ public class UserServiceImpl implements UserService {
         if (createUserDTO.getPasswordConfirmation() == null ||!createUserDTO.getPasswordConfirmation().equals(createUserDTO.getPassword())) {
             throw new RuntimeException("Los password no son iguales");
         }
-        validateUserExists(createUserDTO.getEmail());
+        User user = userRepository.findByEmail(createUserDTO.getEmail());
+        if (user != null) {
+            throw new RuntimeException("El usuario ya esta registrado");
+        }
         try {
             String encryptedPassword = passwordEncoder.encode(createUserDTO.getPassword());
-            User user = User.builder()
+            User newUser = User.builder()
                     .name(createUserDTO.getName())
                     .email(createUserDTO.getEmail())
                     .password(encryptedPassword)
                     .confirmed(false)
                     .build();
 
-            user = userRepository.save(user);
-            CompletableFuture<String> tokenFuture = tokenService.create(user.getId());
-            User finalUser = user;
-            tokenFuture.thenAccept(token -> emailService.sendEmail(finalUser.getEmail(),
+            User finalUser = userRepository.save(newUser);
+            CompletableFuture<String> tokenFuture = tokenService.create(newUser.getId());
+            tokenFuture.thenAccept(token -> emailService.sendConfirmationEmail(finalUser.getEmail(),
                     "UpTask - Confirma tu cuenta",
                     finalUser.getName(),
                     token));
 
-            return user;
+            return newUser;
         } catch (RuntimeException e) {
             throw new RuntimeException("Error al crear usuario");
         }
     }
 
     @Override
+    public void sendConfirmationCode(String email) {
+        User user = userRepository.findByEmail(email);
+        validateUserNotExists(user);
+        if (user.getConfirmed()) {
+            throw new RuntimeException("El usuario ya esta confirmado");
+        }
+        try {
+            sendConfirmationEmail(user);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al enviar correo de confirmacion");
+        }
+
+    }
+
+    @Override
     @Transactional
     public void confirmAcount(String id) {
         User user = userRepository.findById(id).orElse(null);
-        if (user == null) {
-            throw new RuntimeException("El usuario no existe");
-        }
+        validateUserNotExists(user);
         user.setConfirmed(true);
         try {
             userRepository.save(user);
@@ -87,39 +108,72 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void resetPassword(String email) {
+        User user = userRepository.findByEmail(email);
+        validateUserNotExists(user);
+        try {
+            CompletableFuture<String> tokenFuture = tokenService.create(user.getId());
+            tokenFuture.thenAccept(token -> emailService.sendResetPasswordEmail(user.getEmail(),
+                    "UpTask - Reestablece tu password", user.getName(), token));
+        } catch (Exception e) {
+            throw new RuntimeException("Error al enviar correo de reestablecer password");
+        }
+    }
+
+    @Override
+    public void updatePassword(String token, ResetPasswordDTO resetPasswordDTO) {
+        if (resetPasswordDTO.getPassword() == null || resetPasswordDTO.getPassword().trim().length() < 8) {
+            throw new RuntimeException("El password es muy corto, mínimo 8 caractéres");
+        }
+        if (resetPasswordDTO.getPasswordConfirmation() == null ||!resetPasswordDTO.getPasswordConfirmation().equals(resetPasswordDTO.getPassword())) {
+            throw new RuntimeException("Los password no son iguales");
+        }
+
+        Token tokenResult = tokenService.validate(token);
+        User user = userRepository.findById(tokenResult.getUser()).orElse(null);
+        validateUserNotExists(user);
+        String newPassword = passwordEncoder.encode(resetPasswordDTO.getPassword());
+        user.setPassword(newPassword);
+        userRepository.save(user);
+        tokenService.delete(tokenResult);
+    }
+
+    @Override
     public String login(String email, String password) {
         if (email == null || email.isBlank() ) {
-            throw new RuntimeException("El E-mail no puede ir vacio");
+            throw new RuntimeException("El E-mail no puede ir vacío");
         }
         if (password == null || password.isBlank()) {
-            throw new RuntimeException("El password no puede ir vacio");
+            throw new RuntimeException("El password no puede ir vacío");
         }
 
         User user = userRepository.findByEmail(email);
         if (user == null || !user.getEmail().equals(email)) {
             throw new RuntimeException("Usuario no encontrado");
         }
-        if (!user.getConfirmed()) {
-            CompletableFuture<String> tokenFuture = tokenService.create(user.getId());
-            User finalUser = user;
-            tokenFuture.thenAccept(token -> emailService.sendEmail(finalUser.getEmail(),
-                    "UpTask - Confirma tu cuenta",
-                    finalUser.getName(),
-                    token));
-            throw new RuntimeException("La cuenta no ha sido confirmada, hemos enviado un e-mail de confirmacion");
-        }
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Password incorrecto");
         }
+        if (!user.getConfirmed()) {
+            sendConfirmationEmail(user);
+            throw new RuntimeException("La cuenta no ha sido confirmada, hemos enviado un e-mail de confirmación");
+        }
 
-        return "Usuario Autenticado";
+        return jwtService.generateToken(user.getId());
     }
 
-    private void validateUserExists(String email) {
-        User user = userRepository.findByEmail(email);
-        if (user != null) {
-            throw new RuntimeException("El usuario ya esta registrado");
+    private void validateUserNotExists(User user) {
+        if (user == null) {
+            throw new RuntimeException("El usuario no esta registrado");
         }
+    }
+
+    private void sendConfirmationEmail(User user){
+        CompletableFuture<String> tokenFuture = tokenService.create(user.getId());
+        tokenFuture.thenAccept(token -> emailService.sendConfirmationEmail(user.getEmail(),
+                "UpTask - Confirma tu cuenta",
+                user.getName(),
+                token));
     }
 
 }

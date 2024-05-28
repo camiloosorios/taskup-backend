@@ -21,21 +21,20 @@ public class JwtService {
     @Value("${jwt.time.expiration}")
     private long EXPIRATION_TIME;
 
-    public String generateToken(String email) {
+    public String generateToken(String id) {
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(id)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String email = getEmailFromToken(token);
-        return (email.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    public boolean validateToken(String token) {
+        return (!isTokenExpired(token));
     }
 
-    public String getEmailFromToken(String token) {
+    public String getIdFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()

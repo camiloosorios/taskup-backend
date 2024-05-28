@@ -10,4 +10,6 @@ public interface TokenService {
 
     Token validate(String token);
 
+    void delete(Token token);
+
 }

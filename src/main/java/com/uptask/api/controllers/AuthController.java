@@ -1,16 +1,15 @@
 package com.uptask.api.controllers;
 
 import com.uptask.api.DTOs.CreateUserDTO;
+import com.uptask.api.DTOs.LoginDTO;
+import com.uptask.api.DTOs.ResetPasswordDTO;
 import com.uptask.api.Services.TokenService;
 import com.uptask.api.Services.UserService;
 import com.uptask.api.Services.helpers.EmailService;
 import com.uptask.api.models.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,10 +46,8 @@ public class AuthController {
         try {
             String token = body.get("token");
             Token tokenExists = tokenService.validate(token);
-            if (tokenExists == null) {
-                throw new RuntimeException("Token no valido");
-            }
             userService.confirmAcount(tokenExists.getUser());
+            tokenService.delete(tokenExists);
 
             return ResponseEntity.ok().body("Cuenta Confirmada correctamente");
         } catch (RuntimeException e) {
@@ -62,9 +59,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        String password = body.get("password");
+    public ResponseEntity<?> login(@RequestBody LoginDTO body) {
+        String email = body.getEmail();
+        String password = body.getPassword();
         try {
             String message = userService.login(email, password);
 
@@ -77,5 +74,63 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/request-code")
+    public ResponseEntity<?> requestConfirmationCode(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        try {
+            userService.sendConfirmationCode(email);
+
+            return ResponseEntity.ok().body("Se envio un nuevo token a tu e-mail");
+        } catch (RuntimeException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        try {
+            userService.resetPassword(email);
+
+            return ResponseEntity.ok().body("Se envio un nuevo token a tu e-mail");
+        } catch (RuntimeException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/validate-token")
+    public ResponseEntity<?> validateToken(@RequestBody Map<String, String> body) {
+        String token = body.get("token");
+        try {
+            tokenService.validate(token);
+
+            return ResponseEntity.ok().body("Token valido, Define tu nuevo password");
+        } catch (RuntimeException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/update-password/{token}")
+    public ResponseEntity<?> updatePassword(@PathVariable String token, @RequestBody ResetPasswordDTO resetPasswordDTO) {
+        try {
+            userService.updatePassword(token, resetPasswordDTO);
+
+            return ResponseEntity.ok().body("El password se modificó correctamente");
+        } catch (RuntimeException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 
 }

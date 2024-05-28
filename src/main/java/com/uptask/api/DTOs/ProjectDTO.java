@@ -24,6 +24,8 @@ public class ProjectDTO {
 
     List<Task> tasks;
 
+    private String manager;
+
 
     public void addTask(Task task) {
         if (this.tasks == null) {

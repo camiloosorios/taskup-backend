@@ -35,18 +35,24 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    @Transactional
     public Token validate(String token) {
         Token tokenExists =  tokenRepository.findByToken(token);
         if (tokenExists == null) {
             throw new RuntimeException("Token no valido");
         }
+
+        return tokenExists;
+    }
+
+    @Override
+    @Transactional
+    @Async
+    public void delete(Token token) {
         try {
-            tokenRepository.delete(tokenExists);
+            tokenRepository.delete(token);
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar token");
         }
-        return tokenExists;
     }
 
     private String generateToken() {

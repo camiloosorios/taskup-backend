@@ -31,16 +31,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             String jwtToken = requestTokenHeader.substring(7);
             try {
-                String email = jwtService.getEmailFromToken(jwtToken);
-                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                String userId = jwtService.getIdFromToken(jwtToken);
+                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
 
-                    if (jwtService.validateToken(jwtToken, userDetails)) {
-                        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
+                    if (jwtService.validateToken(jwtToken)) {
+                        UsernamePasswordAuthenticationToken authenticationToken =
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                        usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                        authenticationToken.setDetails(userId);
+
+                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     }
                 }
             } catch (Exception e) {

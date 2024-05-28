@@ -30,4 +30,6 @@ public class Project {
     @DBRef
     private List<Task> tasks;
 
+    private String manager;
+
 }

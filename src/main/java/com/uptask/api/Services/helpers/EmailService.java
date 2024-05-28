@@ -26,13 +26,13 @@ public class EmailService {
     private String frontendUrl;
 
     @Async
-    public CompletableFuture<Void> sendEmail(String to, String subject, String name, String token) {
+    public CompletableFuture<Void> sendConfirmationEmail(String to, String subject, String name, String token) {
         MimeMessage message = mailSender.createMimeMessage();
         try {
             message.setFrom("UpTask <admin@uptask.com>");
             message.setRecipients(MimeMessage.RecipientType.TO, to);
             message.setSubject(subject);
-            String htmlTemplate = readFile("emailTemplate.html");
+            String htmlTemplate = readFile("confirmAccountTemplate.html");
             String htmlContent = htmlTemplate.replace("${user}", name);
             htmlContent = htmlContent.replace("${token}", token);
             htmlContent = htmlContent.replace("${frontend}", frontendUrl);
@@ -44,6 +44,26 @@ public class EmailService {
             throw new RuntimeException(e.getMessage());
         }
 
+    }
+
+    @Async
+    public CompletableFuture<Void> sendResetPasswordEmail(String to, String subject, String name, String token) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            message.setFrom("UpTask <admin@uptask.com>");
+            message.setRecipients(MimeMessage.RecipientType.TO, to);
+            message.setSubject(subject);
+            String htmlTemplate = readFile("resetPasswordTemplate.html");
+            String htmlContent = htmlTemplate.replace("${user}", name);
+            htmlContent = htmlContent.replace("${token}", token);
+            htmlContent = htmlContent.replace("${frontend}", frontendUrl);
+            message.setContent(htmlContent, "text/html; charset=utf-8");
+
+            mailSender.send(message);
+            return CompletableFuture.completedFuture(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     public String readFile(String filepath) throws IOException {

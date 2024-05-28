@@ -6,6 +6,8 @@ import com.uptask.api.Services.ProjectService;
 import com.uptask.api.models.Project;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -18,7 +20,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<ProjectDTO> getAllProjects() {
-        List<Project> projects = (List<Project>) projectRepository.findAll();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String manager = (String) authentication.getDetails();
+        List<Project> projects = projectRepository.findByManager(manager);
         List<ProjectDTO> projectDTOs = new ArrayList<>();
         projects.forEach(project -> {
             projectDTOs.add(createProjectDTO(project));
@@ -31,10 +35,13 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public void createProject(ProjectDTO projectDTO) {
         validateProjectDTO(projectDTO);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = (String) authentication.getDetails();
         Project project = Project.builder()
                 .projectName(projectDTO.getProjectName())
                 .clientName(projectDTO.getClientName())
                 .description(projectDTO.getDescription())
+                .manager(userId)
                 .build();
         try {
             projectRepository.save(project);
@@ -48,6 +55,11 @@ public class ProjectServiceImpl implements ProjectService {
         Optional<Project> projectOptional = projectRepository.findById(id);
         if (projectOptional.isPresent()) {
             Project project = projectOptional.get();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userId = (String) authentication.getDetails();
+            if (!project.getManager().equals(userId)) {
+                throw new RuntimeException("Acción no válida");
+            }
 
             return createProjectDTO(project);
         }
@@ -72,7 +84,6 @@ public class ProjectServiceImpl implements ProjectService {
         try {
             projectRepository.save(project);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Error Al Actualizar Proyecto");
         }
     }
@@ -110,6 +121,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .clientName(project.getClientName())
                 .description(project.getDescription())
                 .tasks(project.getTasks())
+                .manager(project.getManager())
                 .build();
     }
 }
