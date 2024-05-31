@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface ProjectRepository extends MongoRepository<Project, String> {
 
-    List<Project> findByManager(String manager);
+    List<Project> findByManagerOrTeamContains(String managerId, String userId);
 
 }

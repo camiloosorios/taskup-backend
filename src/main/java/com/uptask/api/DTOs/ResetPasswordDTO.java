@@ -13,4 +13,6 @@ public class ResetPasswordDTO {
 
     private String passwordConfirmation;
 
+    private String currentPassword;
+
 }

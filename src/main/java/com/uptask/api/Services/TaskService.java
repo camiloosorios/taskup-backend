@@ -14,10 +14,12 @@ public interface TaskService {
 
     TaskDTO getTaskById(ProjectDTO projectDTO, String taskId);
 
-    void updateTask(String taskId, TaskDTO taskDTO, Task task);
+    void updateTask(TaskDTO taskDTO, Task task, ProjectDTO projectDTO);
 
     void deleteTask(ProjectDTO projectDTO, String taskId);
 
-    void updateTaskStatus(String status, Task task);
+    void updateTaskStatus(String status, TaskDTO taskDTO, ProjectDTO projectDTO);
+
+    void modifyNotes(Task task);
 
 }

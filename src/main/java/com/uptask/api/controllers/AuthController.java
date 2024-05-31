@@ -3,12 +3,15 @@ package com.uptask.api.controllers;
 import com.uptask.api.DTOs.CreateUserDTO;
 import com.uptask.api.DTOs.LoginDTO;
 import com.uptask.api.DTOs.ResetPasswordDTO;
+import com.uptask.api.DTOs.UserDTO;
 import com.uptask.api.Services.TokenService;
 import com.uptask.api.Services.UserService;
 import com.uptask.api.Services.helpers.EmailService;
 import com.uptask.api.models.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -131,6 +134,46 @@ public class AuthController {
 
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    @GetMapping("/user")
+    public UserDTO getUser() {
+        return userService.getUser();
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody CreateUserDTO createUserDTO) {
+        String userId = getAuthenticatedUser();
+        try {
+            userService.updateProfile(userId, createUserDTO);
+
+            return ResponseEntity.ok().body("Perfil actualizado");
+        } catch (RuntimeException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/update-password")
+    public ResponseEntity<?> updatePassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
+        String userId = getAuthenticatedUser();
+        try {
+            userService.updateCurrentPassword(userId, resetPasswordDTO);
+
+            return ResponseEntity.ok().body("El password se modificó correctamente");
+        } catch (RuntimeException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    private String getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (String) authentication.getDetails();
     }
 
 }

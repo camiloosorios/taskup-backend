@@ -16,4 +16,8 @@ public interface ProjectService {
 
     void deleteProject(String id);
 
+    void addMemberById(String id, ProjectDTO projectDTO);
+
+    void deleteMember(String id, ProjectDTO projectDTO);
+
 }

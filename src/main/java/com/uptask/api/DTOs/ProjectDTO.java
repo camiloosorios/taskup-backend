@@ -1,10 +1,12 @@
 package com.uptask.api.DTOs;
 
 import com.uptask.api.models.Task;
+import com.uptask.api.models.User;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,9 +24,11 @@ public class ProjectDTO {
 
     private String description;
 
-    List<Task> tasks;
+    private List<Task> tasks;
 
     private String manager;
+
+    private Set<User> team;
 
 
     public void addTask(Task task) {

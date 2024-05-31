@@ -67,10 +67,11 @@ public class TaskController {
     }
 
     @PutMapping("/{taskId}")
-    public ResponseEntity<?> updateTask(@PathVariable String taskId, @RequestBody TaskDTO taskDTO, HttpServletRequest request) {
+    public ResponseEntity<?> updateTask(@RequestBody TaskDTO taskDTO, HttpServletRequest request) {
         try {
             Task task = (Task) request.getAttribute("task");
-            taskService.updateTask(taskId, taskDTO, task);
+            ProjectDTO projectDTO = (ProjectDTO) request.getAttribute("projectDTO");
+            taskService.updateTask(taskDTO, task, projectDTO);
 
             return ResponseEntity.ok().body("Tarea Actualizada Correctamente");
         } catch (RuntimeException e) {
@@ -97,11 +98,11 @@ public class TaskController {
     }
 
     @PostMapping("/{taskId}/status")
-    public ResponseEntity<?> updateTaskStatus(@RequestBody Map<String, String> status, HttpServletRequest request) {
+    public ResponseEntity<?> updateTaskStatus(@PathVariable String taskId, @RequestBody Map<String, String> status, HttpServletRequest request) {
         try {
-            Task task = (Task) request.getAttribute("task");
             ProjectDTO projectDTO = (ProjectDTO) request.getAttribute("projectDTO");
-            taskService.updateTaskStatus(status.get("status"), task);
+            TaskDTO task = taskService.getTaskById(projectDTO, taskId);
+            taskService.updateTaskStatus(status.get("status"), task, projectDTO);
 
             return ResponseEntity.ok().body("Tarea Actualizada Correctamente");
         } catch (RuntimeException e) {

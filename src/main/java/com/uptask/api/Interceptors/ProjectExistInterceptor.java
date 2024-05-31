@@ -35,6 +35,7 @@ public class ProjectExistInterceptor implements HandlerInterceptor {
                 PrintWriter writer = response.getWriter();
                 writer.write(errorMessage);
                 writer.flush();
+                System.out.println("llamado project \n\n\n");
 
                 return false;
             }

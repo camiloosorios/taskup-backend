@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,5 +32,8 @@ public class Project {
     private List<Task> tasks;
 
     private String manager;
+
+    @DBRef
+    private Set<User> team;
 
 }

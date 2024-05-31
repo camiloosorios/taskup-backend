@@ -1,40 +1,33 @@
 package com.uptask.api.models;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
-@Document(collection = "tasks")
-public class Task {
+@Document(collection = "notes")
+public class Note {
 
     @Id
     private String id;
 
     @NotBlank
-    private String name;
+    private String createdBy;
 
     @NotBlank
-    private String description;
+    private String task;
 
     @NotBlank
-    private String status;
-
-    @NotBlank
-    private String project;
-
-    private List<CompletedBy> completedBy;
-
-    @DBRef
-    private List<Note> notes;
+    private String content;
 
     private LocalDate createdAt;
 

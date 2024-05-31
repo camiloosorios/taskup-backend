@@ -3,6 +3,7 @@ package com.uptask.api.Services.impl;
 
 import com.uptask.api.DTOs.CreateUserDTO;
 import com.uptask.api.DTOs.ResetPasswordDTO;
+import com.uptask.api.DTOs.UserDTO;
 import com.uptask.api.Repositories.UserRepository;
 import com.uptask.api.Services.TokenService;
 import com.uptask.api.Services.UserService;
@@ -12,9 +13,12 @@ import com.uptask.api.models.Token;
 import com.uptask.api.models.User;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -160,6 +164,90 @@ public class UserServiceImpl implements UserService {
         }
 
         return jwtService.generateToken(user.getId());
+    }
+
+    @Override
+    public UserDTO getUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = (String) authentication.getDetails();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new RuntimeException("El usuario no esta registrado");
+        }
+        return UserDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .confirmed(user.getConfirmed())
+                .build();
+    }
+
+    @Override
+    public UserDTO findUserByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new RuntimeException("El usuario no esta registrado");
+        }
+        return  UserDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .build();
+    }
+
+    @Override
+    public Optional<User> findUserById(String id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
+    public void updateProfile(String userId, CreateUserDTO createUserDTO) {
+        if (createUserDTO.getName() == null || createUserDTO.getName().isBlank()) {
+            throw new RuntimeException("El nombre no puede ir vacio");
+        }
+        if (createUserDTO.getEmail() == null || createUserDTO.getEmail().isBlank()) {
+            throw new RuntimeException("El E-mail no puede ir vacio");
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (!user.getEmail().equals(createUserDTO.getEmail())) {
+            User userExists = userRepository.findByEmail(createUserDTO.getEmail());
+            if (userExists!= null) {
+                throw new RuntimeException("El E-mail ya esta registrado");
+            }
+        }
+        user.setName(createUserDTO.getName());
+        user.setEmail(createUserDTO.getEmail());
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al actualizar el usuario");
+        }
+    }
+
+    @Override
+    public void updateCurrentPassword(String userId, ResetPasswordDTO resetPasswordDTO) {
+        if (resetPasswordDTO.getCurrentPassword() == null || resetPasswordDTO.getCurrentPassword().isBlank()) {
+            throw new RuntimeException("El password actual no puede ir vacio");
+        }
+        if (resetPasswordDTO.getPassword() == null || resetPasswordDTO.getPassword().isBlank()) {
+            throw new RuntimeException("El password es muy corto minimo 8 caracteres");
+        }
+        if (resetPasswordDTO.getPasswordConfirmation() == null ||!resetPasswordDTO.getPasswordConfirmation().equals(resetPasswordDTO.getPassword())) {
+            throw new RuntimeException("Los password no son iguales");
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (!passwordEncoder.matches(resetPasswordDTO.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("El password es incorrecto");
+        }
+        String newPassword = passwordEncoder.encode(resetPasswordDTO.getPassword());
+        user.setPassword(newPassword);
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al actualizar el password");
+        }
     }
 
     private void validateUserNotExists(User user) {
