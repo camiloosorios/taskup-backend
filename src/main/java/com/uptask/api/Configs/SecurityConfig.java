@@ -39,6 +39,7 @@ public class SecurityConfig {
                     auth.requestMatchers("/api/auth/user").authenticated();
                     auth.requestMatchers("/api/auth/profile").authenticated();
                     auth.requestMatchers("/api/auth/update-password").authenticated();
+                    auth.requestMatchers("/api/auth/check-password").authenticated();
                     auth.requestMatchers("/api/auth/**").permitAll();
                     auth.anyRequest().authenticated();
                 })

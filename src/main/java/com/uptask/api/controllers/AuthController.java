@@ -171,6 +171,21 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/check-password")
+    public ResponseEntity<?> checkPassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
+        String userId = getAuthenticatedUser();
+        try {
+            userService.checkPassword(userId, resetPasswordDTO);
+
+            return ResponseEntity.ok().body("Password correcto");
+        } catch (RuntimeException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     private String getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return (String) authentication.getDetails();

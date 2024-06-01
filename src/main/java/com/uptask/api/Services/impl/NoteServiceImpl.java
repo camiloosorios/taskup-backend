@@ -65,4 +65,9 @@ public class NoteServiceImpl implements NoteService {
         taskService.modifyNotes(task);
 
     }
+
+    @Override
+    public void deleteTaskNotes(String task) {
+        noteRepository.deleteByTask(task);
+    }
 }

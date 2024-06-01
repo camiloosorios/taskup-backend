@@ -4,6 +4,7 @@ import com.uptask.api.DTOs.ProjectDTO;
 import com.uptask.api.DTOs.TaskDTO;
 import com.uptask.api.DTOs.UserDTO;
 import com.uptask.api.Repositories.TaskRepository;
+import com.uptask.api.Services.NoteService;
 import com.uptask.api.Services.ProjectService;
 import com.uptask.api.Services.TaskService;
 import com.uptask.api.Services.UserService;
@@ -14,6 +15,7 @@ import com.uptask.api.models.Task;
 import com.uptask.api.models.User;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +38,10 @@ public class TaskServiceImpl implements TaskService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    @Lazy
+    private NoteService noteService;
 
     @Override
     @Transactional
@@ -126,6 +132,7 @@ public class TaskServiceImpl implements TaskService {
         }
         try {
             hasAuthorization(projectDTO.getManager());
+            noteService.deleteTaskNotes(taskId);
             taskRepository.deleteById(taskId);
             List<Task> updatedTasks = projectDTO.getTasks().stream()
                         .filter(task -> !task.getId().equals(taskId))
@@ -205,6 +212,21 @@ public class TaskServiceImpl implements TaskService {
                 .tasks(projectDTO.getTasks())
                 .manager(projectDTO.getManager())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void deleteProjectTasks(Project project) {
+        try {
+            taskRepository.deleteByProject(project.getId());
+            if (project.getTasks() != null && !project.getTasks().isEmpty()) {
+                project.getTasks().forEach(task -> {
+                    noteService.deleteTaskNotes(task.getId());
+                });
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error al Eliminar Tareas del Proyecto");
+        }
     }
 
     private TaskDTO createTaskDTO(Task task, Project project) {

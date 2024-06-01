@@ -3,11 +3,13 @@ package com.uptask.api.Services.impl;
 import com.uptask.api.DTOs.ProjectDTO;
 import com.uptask.api.Repositories.ProjectRepository;
 import com.uptask.api.Services.ProjectService;
+import com.uptask.api.Services.TaskService;
 import com.uptask.api.Services.UserService;
 import com.uptask.api.models.Project;
 import com.uptask.api.models.User;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    @Lazy
+    private TaskService taskService;
 
     @Override
     public List<ProjectDTO> getAllProjects() {
@@ -45,6 +51,8 @@ public class ProjectServiceImpl implements ProjectService {
                 .projectName(projectDTO.getProjectName())
                 .clientName(projectDTO.getClientName())
                 .description(projectDTO.getDescription())
+                .tasks(new ArrayList<>())
+                .team(new HashSet<>())
                 .manager(managerId)
                 .build();
         try {
@@ -60,9 +68,15 @@ public class ProjectServiceImpl implements ProjectService {
         if (projectOptional.isPresent()) {
             Project project = projectOptional.get();
             String authenticatedUser = getAuthenticatedUser();
-            boolean isMember = project.getTeam().stream().anyMatch(member -> member.getId().equals(authenticatedUser));
-            if (!project.getManager().equals(authenticatedUser) && !isMember) {
-                throw new RuntimeException("Acción no válida");
+            if (project.getTeam() != null) {
+                boolean isMember = project.getTeam().stream().anyMatch(member -> member.getId().equals(authenticatedUser));
+                if (!project.getManager().equals(authenticatedUser) && !isMember) {
+                    throw new RuntimeException("Acción no válida");
+                }
+            } else {
+                if (!project.getManager().equals(authenticatedUser)) {
+                    throw new RuntimeException("Acción no válida");
+                }
             }
 
             return createProjectDTO(project);
@@ -110,6 +124,7 @@ public class ProjectServiceImpl implements ProjectService {
             throw new RuntimeException("Acción no válida");
         }
         try {
+            taskService.deleteProjectTasks(project);
             projectRepository.delete(project);
         } catch (Exception e) {
             throw new RuntimeException("Error Al Eliminar Proyecto");

@@ -239,7 +239,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         if (!passwordEncoder.matches(resetPasswordDTO.getCurrentPassword(), user.getPassword())) {
-            throw new RuntimeException("El password es incorrecto");
+            throw new RuntimeException("El password actual es incorrecto");
         }
         String newPassword = passwordEncoder.encode(resetPasswordDTO.getPassword());
         user.setPassword(newPassword);
@@ -247,6 +247,17 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar el password");
+        }
+    }
+
+    @Override
+    public void checkPassword(String userId, ResetPasswordDTO resetPasswordDTO) {
+        if (resetPasswordDTO.getPassword() == null || resetPasswordDTO.getPassword().isBlank()) {
+            throw new RuntimeException("El password es muy corto minimo 8 caracteres");
+        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("El usuario no existe"));
+        if (!passwordEncoder.matches(resetPasswordDTO.getPassword(), user.getPassword())) {
+            throw new RuntimeException("El password es incorrecto");
         }
     }
 

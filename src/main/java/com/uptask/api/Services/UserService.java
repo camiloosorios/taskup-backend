@@ -30,4 +30,6 @@ public interface UserService {
     void updateProfile(String userId, CreateUserDTO createUserDTO);
 
     void updateCurrentPassword(String userId, ResetPasswordDTO resetPasswordDTO);
+
+    void checkPassword(String userId, ResetPasswordDTO resetPasswordDTO);
 }

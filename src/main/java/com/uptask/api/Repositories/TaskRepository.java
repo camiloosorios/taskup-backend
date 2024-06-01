@@ -13,4 +13,7 @@ public interface TaskRepository extends MongoRepository<Task, String> {
     @Query("{'project': ?0}")
     List<Task> findByProject(String project);
 
+    @Query(value = "{'project': ?0}", delete = true)
+    void deleteByProject(String project);
+
 }
